@@ -9,7 +9,7 @@ import axios from 'axios'
 const vueObj = createApp(App)
 
 vueObj.config.globalProperties.$axios = axios.create({
-    baseURL: 'http://127.0.0.1:5000'
+    baseURL: 'http://127.0.0.1:5000/'
 })
 
 vueObj.use(Quasar, quasarUserOptions)

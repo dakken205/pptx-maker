@@ -28,7 +28,8 @@
                             <q-btn @click="donwloadPowerpoint" class="float-right" title="パワポのダウンロード" color="primary"
                                 icon="print"></q-btn>
                             <q-btn @click="save" class="float-right" title="下書き保存" color="primary" icon="save"></q-btn>
-                            <q-btn @click="reset" class="float-right" title="記入内容リセット" color="red" icon="restart_alt"></q-btn>
+                            <q-btn @click="reset" class="float-right" title="記入内容リセット" color="red"
+                                icon="restart_alt"></q-btn>
                         </div>
                     </div>
                 </div>
@@ -91,7 +92,8 @@
                             <div class="row col q-pt-sm">
                                 <div class="col-2">内容</div>
                                 <q-field class="col-9" outlined dense>
-                                    <div v-html="content.content" class="text-black self-center full-width no-outline"></div>
+                                    <div v-html="content.content" class="text-black self-center full-width no-outline">
+                                    </div>
                                 </q-field>
                             </div>
                         </q-item>
@@ -130,7 +132,7 @@ export default {
                 content: '',
             }),
             dialog: ref([
-                {type: '部門報告', title: null, content: null},
+                { type: '部門報告', title: null, content: null },
             ]),
         }
     },
@@ -155,15 +157,17 @@ export default {
             console.log(this.cc)
         },
         donwloadPowerpoint() {
-            let params = new FormData()
-            params.append('ds', this.ds)
-            params.append('de', this.de)
-            params.append('biz', this.biz)
-            params.append('cc', this.cc)
-            params.append('contents', this.contents)
-            this.$axios.post('/donwload', params).then(function(res) {
-                console.log(res.data.result)
+            const params = {
+                ds : this.ds,
+                de : this.de,
+                biz : this.biz,
+                cc : this.cc,
+                contents: this.contents
+            }
+            this.$axios.post('/download', params).then(function (response) {
+                console.log(response.data)
             }.bind(this))
+
         },
         htmlText(msg) {
             if (msg instanceof String) {
