@@ -4,8 +4,8 @@ from flask_cors import CORS
 app = Flask(__name__, static_folder="./../frontend/dist/static", template_folder="./../frontend/dist")
 
 app.config['JSON_AS_ASCII'] = False
-# CORS(app)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:8080"]}})
+CORS(app)
+# CORS(app, resources={r"/*": {"origins": ["http://localhost:8080"]}})
 
 @app.after_request
 def after_request(response):
