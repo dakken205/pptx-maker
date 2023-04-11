@@ -9,7 +9,7 @@ CORS(app)
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
@@ -17,3 +17,18 @@ def after_request(response):
 @app.route('/<path:path>')
 def index(path):
     return render_template("index.html")
+
+@app.route('/download', methods=['POST'])
+def download():
+    try:
+        if request.method == 'POST':
+            data = request.form['ds']
+            print(data)
+            return make_response(jsonify({'result' : 'OK'}))
+        else:
+            return make_response(jsonify({'result' : 'Invalid method.'}))
+    except:
+        return make_response(jsonify({'result' : 'Something error occured in server.'}))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

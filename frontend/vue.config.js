@@ -4,6 +4,8 @@ module.exports = defineConfig({
     'quasar'
   ],
 
+  assetsDir: 'static',
+
   pluginOptions: {
     quasar: {
       importStrategy: 'kebab',

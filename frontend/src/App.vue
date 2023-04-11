@@ -40,16 +40,25 @@
         :breakpoint="500"
         :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
       >
-        <q-scroll-area class="fit">
           <div class="q-pa-sm">
-            <div v-for="n in 50" :key="n">Drawer {{ n }} / 50</div>
+            <div v-for="item, i in contentDialog" :key="i">
+              <template v-if="i <= 1">
+                <div class="text-h6">
+                  <u>{{ item.type }}</u>
+                </div>
+              </template>
+              <template v-if="i >= 1">
+                <div class="text-subtitle1 q-ml-md">
+                  ・<u>{{  item.title }}</u>
+                </div>
+              </template>
+            </div>
           </div>
-        </q-scroll-area>
       </q-drawer>
 
       <q-page-container>
         <q-page>
-          <Content></Content>
+          <Content @update-dialog="handleDialog"></Content>
         </q-page>
       </q-page-container>
     </q-layout>
@@ -67,7 +76,21 @@ export default {
   setup () {
     return {
       drawerLeft: ref(false),
-      drawerRight: ref(false)
+      drawerRight: ref(false),
+      contentDialog: ref([{type: '部門報告', title: null, content: null}]),
+    }
+  },
+  created() {
+    console.log(this.contentDialog)
+  },
+  methods: {
+    handleDialog(dialog) {
+      this.contentDialog = dialog
+    }
+  },
+  watch: {
+    contentDialog(newVal) {
+      this.contentDialog = newVal
     }
   }
 }

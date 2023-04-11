@@ -4,6 +4,7 @@
 ```
 npm install
 npm install dayjs --save
+npm install axios --save
 ```
 
 ### Compiles and hot-reloads for development
