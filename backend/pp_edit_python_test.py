@@ -1,22 +1,28 @@
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.util import Pt, Cm
+from pptx.util import Pt, Cm, Inches
+from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE, MSO_ANCHOR
 
 # フォントのルール
 style_format = {
+    'header_on_start_slide' : {
+        'font' : 'メイリオ',
+        'font-size' : Pt(138),
+        'font-color' : RGBColor(64, 64, 64),
+    },
     'type' : {
         'font' : 'メイリオ',
         'font-size' : Pt(60),
         'font-color' : RGBColor(255, 255, 255),
     },
-    'date' : {
+    'date_outline' : {
         'font' : 'メイリオ',
         'font-size' : Pt(40),
         'font-color' : RGBColor(64, 64, 64),
     },
-    'department-presentor' : {
+    'department-title' : {
         'font' : 'メイリオ',
-        'font-size' : Pt(24),
+        'font-size' : Pt(32),
         'font-color' : RGBColor(64, 64, 64),
     },
     'department-content' : {
@@ -126,14 +132,23 @@ def set_title_bg(slide):
 
 
 # 最初のスライドに日付を追加するための処理
-def set_date_text(slides):
-    start_slide = slides[0]
-    date_shape = start_slide.shapes[1]
-    data_paragraph = date_shape.text_frame.paragraphs[0]
-    data_paragraph.text = '4月8日'
-    apply_format(data_paragraph, 'date')
-    data_paragraph.font.bold = True
-
+def set_date_text(start_slide):
+    width = Cm(25.4)
+    height = Cm(1.98)
+    left = Cm(4.23)
+    top = Cm(10.42)
+    textbox = start_slide.shapes.add_textbox(
+        left=left,
+        top=top,
+        width=width,
+        height=height,
+    )
+    text_frame = textbox.text_frame
+    text_frame.text = '2023年4月7日（金）'
+    paragraph = textbox.text_frame.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    apply_format(paragraph, 'date_outline')
+    paragraph.font.bold = True
 
 # 連絡事項の追加制御
 def add_info_share(prs, info_contents):
@@ -155,35 +170,22 @@ def add_info_share(prs, info_contents):
         info_content = f'{content.title}\n{content.content}'
         set_content(slide, info_content)
         
-
-# ---------------これから-------------------------
-
-# 目次部分の内容の追加
-def set_outline_content(slide):
-    set_title_bg(slide)
-    set_type(slide, '目次')
-
-
-# 部門報告の内容追加
-def set_department_content(slide):
-    set_title_bg(slide)
-    set_type('部門報告')
-
-
 def add_header_on_start_slide(start_slide):
-    width = Cm(29.21)
-    height = Cm(3.68)
-    left = Cm(0.89)
-    top = Cm(0.8)
+    width = Cm(25.4)
+    height = Cm(6.63)
+    left = Cm(4.23)
+    top = Cm(4.53)
     textbox = start_slide.shapes.add_textbox(
         left=left,
         top=top,
         width=width,
         height=height,
     )
-    textbox.text = '報告会'
+    text_frame = textbox.text_frame
+    text_frame.text = '報告会'
     paragraph = textbox.text_frame.paragraphs[0]
-    apply_format(paragraph, 'type')
+    apply_format(paragraph, 'header_on_start_slide')
+    paragraph.alignment = PP_ALIGN.CENTER
     paragraph.font.bold = True
 
 def add_start_slide(prs):
@@ -193,19 +195,130 @@ def add_start_slide(prs):
     add_slide(prs)
     start_slide = prs.slides[0]
     add_header_on_start_slide(start_slide)
+    set_date_text(start_slide)
+
+# 目次部分の内容の追加
+def add_outline_slide(prs, hasInfo: bool):
+    add_slide(prs)
+    slide = prs.slides[1]
+    set_title_bg(slide)
+    set_type(slide, '目次')
+    set_outline_content(slide, hasInfo)
+
+
+def set_outline_content(slide, hasInfo):
+    width = Cm(31.73)
+    height = Cm(13.67)
+    left = Cm(0.97)
+    top = Cm(4.52)
+    textbox = slide.shapes.add_textbox(
+        left=left,
+        top=top,
+        width=width,
+        height=height,
+    )
+    text_frame = textbox.text_frame
+    paragraph = text_frame.paragraphs[0]
+    paragraph.text = '1. 部門報告'
+    paragraph.level = 0
+    paragraph.font.bold = True
+    apply_format(paragraph, 'date_outline')
+    paragraph.line_spacing = 1.2
+
+    if hasInfo:
+        paragraph = text_frame.add_paragraph()
+        paragraph.text = '2. 連絡事項'
+        paragraph.level = 0
+        paragraph.font.bold = True
+        apply_format(paragraph, 'date_outline')
+        paragraph.line_spacing = 1.2
+    
+    text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    text_frame.vertical_anchor = MSO_ANCHOR.TOP
+
+
+# ---------------これから-------------------------
+
+# 部門報告の内容追加
+def set_department_content(department_slide):
+    width = Cm(30.2)
+    height = Cm(13.67)
+    left = Cm(1.81)
+    top = Cm(4.52)
+    textbox = department_slide.shapes.add_textbox(
+        left=left,
+        top=top,
+        width=width,
+        height=height,
+    )
+    text_frame = textbox.text_frame
+    departments = ['ds', 'de', 'biz', 'cc']
+    # departments = ['ds']
+    departments_contents = {
+        'ds' : [
+            'content1',
+            'content2',
+        ],
+        'de' : [
+            'content1',
+        ],
+        'biz' : [
+        ],
+        'cc' : [
+            'content1',
+            'content2',
+        ],
+    }
+    for department in departments:
+        department_upper = department.upper() if department != 'biz' else 'Biz'
+        department_label = f'{department_upper}部門'
+        presentetor = '山田'
+        department_title_paragraph = text_frame.add_paragraph()
+        department_title_paragraph.text = f'{department_label} by{presentetor}'
+        apply_format(department_title_paragraph, 'department-title')
+        department_title_paragraph.font.bold = True
+        department_title_paragraph.line_spacing = 1.2
+
+        if len(departments_contents[department]) == 0:
+            department_content_paragraph = text_frame.add_paragraph()
+            department_content_paragraph.line_spacing = 1.2
+            department_content_paragraph.text = f'\t・なし'
+            apply_format(department_content_paragraph, 'department-content')
+            department_content_paragraph.font.bold = True
+        else:
+            for department_content in departments_contents[department]:
+                department_content_paragraph = text_frame.add_paragraph()
+                department_content_paragraph.line_spacing = 1.25
+                department_content_paragraph.text = f'\t・{department_content}'
+                apply_format(department_content_paragraph, 'department-content')
+                department_content_paragraph.font.bold = True
+
+        # for run in department_title_paragraph.runs:
+        #     print(run.text)
+    
+
+def add_department_slide(prs):
+    add_slide(prs)
+    slides = prs.slides
+    department_slide = slides[2]
+    set_title_bg(department_slide)
+    set_type(department_slide, '１．各部門報告/その他報告')
+    set_department_content(department_slide)
     
 # -----------------これから---------------------
-
-
 
 # ファイルの操作に必要な変数の定義
 datefmt = '20230407'
 output_filename = f'{datefmt}.pptx'
-input_filename = 'sample.pptx'
+input_filename = 'empty.pptx'
 input_path = f'./inputs/{input_filename}'
 
-prs = Presentation(input_path)
+prs = Presentation()
+prs.slide_width = Inches(16 * 5 / 6)
+prs.slide_height = Inches(9 * 5 / 6)
 
 add_start_slide(prs)
+add_outline_slide(prs, True)
+add_department_slide(prs)
 
 prs.save('./outputs/output.pptx')
