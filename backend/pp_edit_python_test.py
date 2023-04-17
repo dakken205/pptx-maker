@@ -44,17 +44,6 @@ style_format = {
 # その他のルール
 # *~~~* : 太字
 
-contents = [
-    {
-        'title' : 'title1',
-        'content' : 'content1',
-    },
-    {
-        'title' : 'title2',
-        'content' : 'content2',
-    },
-]
-
 
 # 対象の文字列に、フォント、フォントサイズ、フォントの色を一括しているするためのコード
 def apply_format(pptx_obj, target):
@@ -132,7 +121,11 @@ def set_title_bg(slide):
 
 
 # 最初のスライドに日付を追加するための処理
-def set_date_text(start_slide):
+def set_date_text(start_slide, datefmt: str):
+    '''
+    start_slide: 最初のスライド
+    datefmt: 定例会の日時(例: 2023年4月7日（金）)
+    '''
     width = Cm(25.4)
     height = Cm(1.98)
     left = Cm(4.23)
@@ -144,19 +137,20 @@ def set_date_text(start_slide):
         height=height,
     )
     text_frame = textbox.text_frame
-    text_frame.text = '2023年4月7日（金）'
+    text_frame.text = datefmt
     paragraph = textbox.text_frame.paragraphs[0]
     paragraph.alignment = PP_ALIGN.CENTER
     apply_format(paragraph, 'date_outline')
     paragraph.font.bold = True
+
 
 # 連絡事項の追加制御
 def add_info_share(prs, info_contents):
     '''
     prs: Presentationオブジェクトを渡す
     info_contents: [
-        'title' : '~~~',
-        'contents : '~~~'.
+        'title' : '~~',
+        'contents : '~~'.
     ]
     info_contentは連絡事項に関する情報だけを渡すようにする
     '''
@@ -167,9 +161,10 @@ def add_info_share(prs, info_contents):
         slide = slides[slide_cnt-1]
         set_title_bg(slide)
         set_type(slide, '連絡事項')
-        info_content = f'{content.title}\n{content.content}'
+        info_content = '{}\n{}'.format(content['title'], content['content'])
         set_content(slide, info_content)
-        
+
+
 def add_header_on_start_slide(start_slide):
     width = Cm(25.4)
     height = Cm(6.63)
@@ -188,14 +183,17 @@ def add_header_on_start_slide(start_slide):
     paragraph.alignment = PP_ALIGN.CENTER
     paragraph.font.bold = True
 
-def add_start_slide(prs):
+
+def add_start_slide(prs, datefmt: str):
     '''
     prs : 空のpresentationオブジェクトを渡す
+    datefmt : 定例会日時(例: 2023年4月7日（金）)
     '''
     add_slide(prs)
     start_slide = prs.slides[0]
     add_header_on_start_slide(start_slide)
-    set_date_text(start_slide)
+    set_date_text(start_slide, datefmt)
+
 
 # 目次部分の内容の追加
 def add_outline_slide(prs, hasInfo: bool):
@@ -237,14 +235,22 @@ def set_outline_content(slide, hasInfo):
     text_frame.vertical_anchor = MSO_ANCHOR.TOP
 
 
-# ---------------これから-------------------------
-
 # 部門報告の内容追加
-def set_department_content(department_slide):
+def set_department_content(department_slide, departments_contents):
+    '''
+    department_slide: slideオブジェクト
+        部門報告のスライド
+    departments_contents: 各部門ごとの活動内容に関する辞書
+        {
+            'ds' : [
+                {'title' : '~~', 'content', '~~'},
+            ], ...
+        }
+    '''
     width = Cm(30.2)
     height = Cm(13.67)
     left = Cm(1.81)
-    top = Cm(4.52)
+    top = Cm(3.52)
     textbox = department_slide.shapes.add_textbox(
         left=left,
         top=top,
@@ -253,22 +259,6 @@ def set_department_content(department_slide):
     )
     text_frame = textbox.text_frame
     departments = ['ds', 'de', 'biz', 'cc']
-    # departments = ['ds']
-    departments_contents = {
-        'ds' : [
-            'content1',
-            'content2',
-        ],
-        'de' : [
-            'content1',
-        ],
-        'biz' : [
-        ],
-        'cc' : [
-            'content1',
-            'content2',
-        ],
-    }
     for department in departments:
         department_upper = department.upper() if department != 'biz' else 'Biz'
         department_label = f'{department_upper}部門'
@@ -293,32 +283,74 @@ def set_department_content(department_slide):
                 apply_format(department_content_paragraph, 'department-content')
                 department_content_paragraph.font.bold = True
 
-        # for run in department_title_paragraph.runs:
-        #     print(run.text)
-    
-
-def add_department_slide(prs):
+def add_department_slide(prs, departments_contents):
+    '''
+    prs : プレゼンテーションオブジェクト
+    departments_contents: 各部門ごとの活動内容に関する辞書
+        {
+            'ds' : [
+                {'title' : '~~', 'content', '~~'},
+            ], ...
+        }
+    '''
     add_slide(prs)
     slides = prs.slides
     department_slide = slides[2]
     set_title_bg(department_slide)
     set_type(department_slide, '１．各部門報告/その他報告')
-    set_department_content(department_slide)
-    
+    set_department_content(department_slide, departments_contents)
+
+# ---------------これから-------------------------
+# ここで全ての関数を利用して、一からスライドを作成してみる
+
+# 中身(フロントエンド側から受け取る値)
+# departments_contents = {
+#     'ds' : [
+#         'content1',
+#         'content2',
+#     ],
+#     'de' : [
+#         'content1',
+#     ],
+#     'biz' : [
+#     ],
+#     'cc' : [
+#         'content1',
+#         'content2',
+#     ],
+# }
+# info_contents = [
+#     {
+#         'title' : 'title1',
+#         'content' : 'content1',
+#     },
+#     {
+#         'title' : 'title2',
+#         'content' : 'content2',
+#     },
+# ]
+# datefmt_filename = '20230407'
+# datefmt = '2023年4月7日（金）'
+
+
+# # ファイルの操作に必要な変数の定義
+# output_filename = f'{datefmt}.pptx'
+# input_filename = 'empty.pptx'
+# input_path = f'./inputs/{input_filename}'
+
+
+
+# # 操作するパワポの作成とサイズ指定
+# prs = Presentation()
+# prs.slide_width = Inches(16 * 5 / 6)
+# prs.slide_height = Inches(9 * 5 / 6)
+
+
+# # 内容の当て込み
+# add_start_slide(prs, datefmt)
+# add_outline_slide(prs, True)
+# add_department_slide(prs, departments_contents)
+# add_info_share(prs, info_contents)
+
+# prs.save(f'./outputs/{datefmt_filename}.pptx')
 # -----------------これから---------------------
-
-# ファイルの操作に必要な変数の定義
-datefmt = '20230407'
-output_filename = f'{datefmt}.pptx'
-input_filename = 'empty.pptx'
-input_path = f'./inputs/{input_filename}'
-
-prs = Presentation()
-prs.slide_width = Inches(16 * 5 / 6)
-prs.slide_height = Inches(9 * 5 / 6)
-
-add_start_slide(prs)
-add_outline_slide(prs, True)
-add_department_slide(prs)
-
-prs.save('./outputs/output.pptx')

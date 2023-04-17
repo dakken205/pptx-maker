@@ -31,29 +31,25 @@
         </q-scroll-area>
       </q-drawer> -->
 
-      <q-drawer
-        side="right"
-        v-model="drawerRight"
-        show-if-above
-        bordered
-        :width="150"
-        :breakpoint="500"
-        :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
-      >
-          <div class="q-pa-sm">
-            <div v-for="item, i in contentDialog" :key="i">
-              <template v-if="i <= 1">
-                <div class="text-h6">
-                  <u>{{ item.type }}</u>
-                </div>
-              </template>
-              <template v-if="i >= 1">
-                <div class="text-subtitle1 q-ml-md">
-                  ・<u>{{  item.title }}</u>
-                </div>
-              </template>
-            </div>
+      <q-drawer side="right" v-model="drawerRight" show-if-above bordered :width="150" :breakpoint="500"
+        :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+        <div class="q-pa-sm">
+          <div class="text-h6">
+            <u>部門報告</u>
           </div>
+          <template v-if="contentDialog.length !== 0">
+            <div v-for="item, i in contentDialog" :key="i">
+              <template v-if="i == 0">
+                <div class="text-h6">
+                  <u>連絡事項</u>
+                </div>
+              </template>
+              <div class="text-subtitle1 q-ml-md">
+                ・<u>{{ item.title }}</u>
+              </div>
+            </div>
+          </template>
+        </div>
       </q-drawer>
 
       <q-page-container>
@@ -73,11 +69,11 @@ export default {
   components: {
     Content,
   },
-  setup () {
+  setup() {
     return {
       drawerLeft: ref(false),
       drawerRight: ref(false),
-      contentDialog: ref([{type: '部門報告', title: null, content: null}]),
+      contentDialog: ref([]),
     }
   },
   created() {

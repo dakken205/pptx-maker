@@ -131,9 +131,7 @@ export default {
                 title: '',
                 content: '',
             }),
-            dialog: ref([
-                { type: '部門報告', title: null, content: null },
-            ]),
+            dialog: ref([]),
         }
     },
     created() {
@@ -144,30 +142,39 @@ export default {
             this.contents.push(pushItem)
             let dialogItem = JSON.parse(JSON.stringify(pushItem))
             let newDialog = JSON.parse(JSON.stringify(this.dialog))
-            dialogItem.type = '連絡事項'
             newDialog.push(dialogItem)
             this.dialog = newDialog
             this.pushingContent = initialContent
         },
 
         save() {
-            console.log(this.ds)
-            console.log(this.de)
-            console.log(this.biz)
-            console.log(this.cc)
+            console.log(this.dialog)
         },
         donwloadPowerpoint() {
-            const params = {
-                ds : this.ds,
-                de : this.de,
-                biz : this.biz,
-                cc : this.cc,
-                contents: this.contents
+            const datefmt = dayjs(this.date).format('YYYY年MM月DD日（ddd）')
+            const datefmt_filename = dayjs(this.date).format('YYYYMMDD')
+            const info_contents = this.dialog
+            const departments_contents = {
+                ds : [this.ds],
+                de : [this.de],
+                biz : [this.biz],
+                cc : [this.cc],
             }
-            this.$axios.post('/download', params).then(function (response) {
-                console.log(response.data)
-            }.bind(this))
+            // const info_contents = {
 
+            // }
+            const params = {
+                departments_contents: departments_contents,
+                datefmt: datefmt,
+                info_contents: info_contents,
+            }
+            this.$axios.post('/generate', params).then(function (response) {
+                const downloadURL = response.data.download_url
+                const downloadLink = document.createElement('a')
+                downloadLink.href = downloadURL
+                downloadLink.download = `${datefmt_filename}.pptx`
+                downloadLink.click()
+            }.bind(this))
         },
         htmlText(msg) {
             if (msg instanceof String) {
