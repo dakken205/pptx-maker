@@ -3,8 +3,8 @@
 ## Project setup
 ```
 npm install
-npm install dayjs --save
-npm install axios --save
+npm install dayjs firebase axios --save
+npm install -g firebase-tools
 ```
 
 ### Compiles and hot-reloads for development

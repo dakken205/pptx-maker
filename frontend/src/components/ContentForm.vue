@@ -11,11 +11,11 @@
                                 <q-icon name="event" class="cursor-pointer">
                                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                                         <q-date v-model="date" :title="date" subtitle="定例会開催日時" :locale="{
-                                            months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-                                            monthsShort: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-                                            days: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
-                                            daysShort: ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜']
-                                        }">
+                                                months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                                                monthsShort: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                                                days: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+                                                daysShort: ['日曜', '月曜', '火曜', '水曜', '木曜', '金曜', '土曜']
+                                            }">
                                             <div class="row items-center justify-end">
                                                 <q-btn v-close-popup label="Close" color="primary" flat />
                                             </div>
@@ -83,18 +83,24 @@
                             <div style="height: 100px; width: 100%; text-align: center; padding-top: 30px;">連絡事項未登録</div>
                         </template>
                         <q-item class="border column" v-for="content, i in contents" :key="i" style="min-height: 170px;">
-                            <div class="row col-5 q-pt-sm">
-                                <div class="col-2">タイトル</div>
-                                <q-field class="col-9" outlined dense>
-                                    <div v-html="content.title" class="text-black self-center full-width no-outline"></div>
-                                </q-field>
-                            </div>
-                            <div class="row col q-pt-sm">
-                                <div class="col-2">内容</div>
-                                <q-field class="col-9" outlined dense>
-                                    <div v-html="content.content" class="text-black self-center full-width no-outline">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="row col-5 q-pt-sm">
+                                        <div class="col-2">タイトル</div>
+                                        <q-field class="col-9" outlined dense>
+                                            <div v-html="content.title" class="text-black self-center full-width no-outline">
+                                            </div>
+                                        </q-field>
                                     </div>
-                                </q-field>
+                                    <div class="row col q-pt-sm">
+                                        <div class="col-2">内容</div>
+                                        <q-field class="col-9" outlined dense>
+                                            <div v-html="content.content" class="text-black self-center full-width no-outline">
+                                            </div>
+                                        </q-field>
+                                    </div>
+                                </div>
+                                <q-btn @click="deleteInfoItem(i)" class="col-1 q-mt-md" icon="delete" color="primary" style="height: 50px;"></q-btn>
                             </div>
                         </q-item>
                     </q-list>
@@ -144,6 +150,7 @@ export default {
             let newDialog = JSON.parse(JSON.stringify(this.dialog))
             newDialog.push(dialogItem)
             this.dialog = newDialog
+            
             this.pushingContent = initialContent
         },
 
@@ -155,10 +162,10 @@ export default {
             const datefmt_filename = dayjs(this.date).format('YYYYMMDD')
             const info_contents = this.dialog
             const departments_contents = {
-                ds : [this.ds],
-                de : [this.de],
-                biz : [this.biz],
-                cc : [this.cc],
+                ds: [this.ds],
+                de: [this.de],
+                biz: [this.biz],
+                cc: [this.cc],
             }
             // const info_contents = {
 
@@ -188,10 +195,16 @@ export default {
             this.cc = ''
             this.contents = []
             this.pushingContent = initialContent
+            this.dialog = []
+        },
+        deleteInfoItem(i) {
+            this.contents.splice(i, 1)
+            this.dialog = this.contents
         }
     },
     watch: {
         dialog(newVal) {
+            console.log('watchが実行されました')
             this.$emit('update-dialog', newVal)
         }
     }

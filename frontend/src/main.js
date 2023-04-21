@@ -5,6 +5,10 @@ import store from './store'
 import { Quasar } from 'quasar'
 import quasarUserOptions from './quasar-user-options'
 import axios from 'axios'
+import { firebaseConfig } from 'firebaseConfig'
+import { initializeApp } from 'firebase/app'
+
+const app = initializeApp(firebaseConfig)
 
 const vueObj = createApp(App)
 
