@@ -24,7 +24,8 @@ def after_request(response):
     return response
 
 
-@app.route('/')
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
 def index(path):
     return render_template("index.html")
 
@@ -67,7 +68,7 @@ def download_ppt():
     return send_file(
         ppt_file,
         as_attachment=True,
-        attachment_filename="sample_presentation.pptx",  # TODO: 適切な名前に変更
+        download_name="sample_presentation.pptx",  # TODO: 適切な名前に変更
         mimetype=
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     )
