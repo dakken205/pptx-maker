@@ -1,6 +1,6 @@
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.util import Pt, Cm, Inches
+from pptx.util import Pt, Cm
 from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE, MSO_ANCHOR
 
 # フォントのルール
@@ -299,58 +299,3 @@ def add_department_slide(prs, departments_contents):
     set_title_bg(department_slide)
     set_type(department_slide, '１．各部門報告/その他報告')
     set_department_content(department_slide, departments_contents)
-
-# ---------------これから-------------------------
-# ここで全ての関数を利用して、一からスライドを作成してみる
-
-# 中身(フロントエンド側から受け取る値)
-# departments_contents = {
-#     'ds' : [
-#         'content1',
-#         'content2',
-#     ],
-#     'de' : [
-#         'content1',
-#     ],
-#     'biz' : [
-#     ],
-#     'cc' : [
-#         'content1',
-#         'content2',
-#     ],
-# }
-# info_contents = [
-#     {
-#         'title' : 'title1',
-#         'content' : 'content1',
-#     },
-#     {
-#         'title' : 'title2',
-#         'content' : 'content2',
-#     },
-# ]
-# datefmt_filename = '20230407'
-# datefmt = '2023年4月7日（金）'
-
-
-# # ファイルの操作に必要な変数の定義
-# output_filename = f'{datefmt}.pptx'
-# input_filename = 'empty.pptx'
-# input_path = f'./inputs/{input_filename}'
-
-
-
-# # 操作するパワポの作成とサイズ指定
-# prs = Presentation()
-# prs.slide_width = Inches(16 * 5 / 6)
-# prs.slide_height = Inches(9 * 5 / 6)
-
-
-# # 内容の当て込み
-# add_start_slide(prs, datefmt)
-# add_outline_slide(prs, True)
-# add_department_slide(prs, departments_contents)
-# add_info_share(prs, info_contents)
-
-# prs.save(f'./outputs/{datefmt_filename}.pptx')
-# -----------------これから---------------------
