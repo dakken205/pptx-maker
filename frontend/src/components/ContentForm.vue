@@ -40,19 +40,19 @@
                 <div class="q-pa-md">
                     <div class="row col-5 q-pb-sm">
                         <div class="col-2">DS部門</div>
-                        <q-input v-model="ds" class="col-9" outlined dense autogrow></q-input>
+                        <q-input :disable="!role.includes('ds')" v-model="ds" class="col-9" outlined dense autogrow></q-input>
                     </div>
                     <div class="row col-5 q-pb-sm">
                         <div class="col-2">DE部門</div>
-                        <q-input v-model="de" class="col-9" outlined dense autogrow></q-input>
+                        <q-input :disable="!role.includes('de')" v-model="de" class="col-9" outlined dense autogrow></q-input>
                     </div>
                     <div class="row col-5 q-pb-sm">
                         <div class="col-2">Biz部門</div>
-                        <q-input v-model="biz" class="col-9" outlined dense autogrow></q-input>
+                        <q-input :disable="!role.includes('biz')" v-model="biz" class="col-9" outlined dense autogrow></q-input>
                     </div>
                     <div class="row col-5 q-pb-sm">
                         <div class="col-2">CC部門</div>
-                        <q-input v-model="cc" class="col-9" outlined dense autogrow></q-input>
+                        <q-input :disable="!role.includes('cc')" v-model="cc" class="col-9" outlined dense autogrow></q-input>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,8 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
+import useQuasar from 'quasar/src/composables/use-quasar.js';
 import { updateDoc, getDoc, doc, onSnapshot } from 'firebase/firestore'
 
 import dayjs from 'dayjs'
@@ -127,12 +128,27 @@ const initialContent = {
     title: '',
     content: '',
 }
-let info_contents_listener = null
-console.log(info_contents_listener)
 
 export default {
     setup() {
+        const $q = useQuasar()
+        let timer
+
+        onBeforeUnmount(() => {
+            if (timer !== void 0) {
+                clearTimeout(timer)
+                $q.loading.hide()
+            }
+        })
         return {
+            showLoading(message) {
+                $q.loading.show({
+                    message: message
+                })
+            },
+            hideLoading() {
+                $q.loading.hide()
+            },
             date: ref(today),
             ds: ref(''),
             de: ref(''),
@@ -142,28 +158,33 @@ export default {
                 title: '',
                 content: '',
             }),
+            myNewDialog: ref([]),
             dialog: ref([]),
+            role: ref('')
         }
     },
-    beforeCreate() {
-        onSnapshot(doc(this.$firestore, '/root/departments'), docSnapshot => {
+    async beforeCreate() {
+        await onSnapshot(doc(this.$firestore, '/root/departments'), docSnapshot => {
             this.ds = docSnapshot.data().ds
             this.de = docSnapshot.data().de
             this.biz = docSnapshot.data().biz
             this.cc = docSnapshot.data().cc
-            this.contents = docSnapshot.data().info_contents
             this.dialog = docSnapshot.data().info_contents
+            this.dialog = [...this.dialog, ...this.myNewDialog]
         })
     },
     async created() {
-        getDoc(doc(this.$firestore, '/root/departments'))
+        await getDoc(doc(this.$firestore, '/root/departments'))
             .then(docSnapshot => {
                 this.ds = docSnapshot.data().ds
                 this.de = docSnapshot.data().de
                 this.biz = docSnapshot.data().biz
                 this.cc = docSnapshot.data().cc
-                this.contents = docSnapshot.data().info_contents
                 this.dialog = docSnapshot.data().info_contents
+            })
+        await getDoc(doc(this.$firestore, `users/${this.$auth.currentUser.email}`))
+            .then((docSnapshot) => {
+                this.role = docSnapshot.data().role
             })
     },
     methods: {
@@ -173,11 +194,13 @@ export default {
             let newDialog = JSON.parse(JSON.stringify(this.dialog))
             newDialog.push(dialogItem)
             this.dialog = newDialog
-
+            this.myNewDialog.push(pushItem)
             this.pushingContent = initialContent
         },
 
-        save() {
+        async save() {
+            this.showLoading('Database operations are in progress. Hang on...')
+            this.myNewDialog = []
             const data = {
                 ds: this.ds,
                 de: this.de,
@@ -185,7 +208,8 @@ export default {
                 cc: this.cc,
                 info_contents: this.dialog,
             }
-            updateDoc(doc(this.$firestore, '/root/departments'), data)
+            await updateDoc(doc(this.$firestore, '/root/departments'), data)
+            this.hideLoading()
         },
         donwloadPowerpoint() {
             const datefmt = dayjs(this.date).format('YYYY年MM月DD日（ddd）')
@@ -197,9 +221,6 @@ export default {
                 biz: [this.biz],
                 cc: [this.cc],
             }
-            // const info_contents = {
-
-            // }
             const params = {
                 departments_contents: departments_contents,
                 datefmt: datefmt,
@@ -223,12 +244,11 @@ export default {
             this.de = ''
             this.biz = ''
             this.cc = ''
-            this.contents = []
             this.pushingContent = initialContent
             this.dialog = []
         },
         deleteInfoItem(i) {
-            this.dialog = this.contents.splice(i, 1)
+            this.dialog.splice(i, 1)
         }
     },
     watch: {
