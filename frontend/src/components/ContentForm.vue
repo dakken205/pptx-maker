@@ -79,28 +79,31 @@
                                 </div>
                             </q-item>
                         </q-card>
-                        <template v-if="contents.length === 0">
+                        <template v-if="dialog.length === 0">
                             <div style="height: 100px; width: 100%; text-align: center; padding-top: 30px;">連絡事項未登録</div>
                         </template>
-                        <q-item class="border column" v-for="content, i in contents" :key="i" style="min-height: 170px;">
+                        <q-item class="border column" v-for="content, i in dialog" :key="i" style="min-height: 170px;">
                             <div class="row">
                                 <div class="col">
                                     <div class="row col-5 q-pt-sm">
                                         <div class="col-2">タイトル</div>
                                         <q-field class="col-9" outlined dense>
-                                            <div v-html="content.title" class="text-black self-center full-width no-outline">
+                                            <div v-html="content.title"
+                                                class="text-black self-center full-width no-outline">
                                             </div>
                                         </q-field>
                                     </div>
                                     <div class="row col q-pt-sm">
                                         <div class="col-2">内容</div>
                                         <q-field class="col-9" outlined dense>
-                                            <div v-html="content.content" class="text-black self-center full-width no-outline">
+                                            <div v-html="content.content"
+                                                class="text-black self-center full-width no-outline">
                                             </div>
                                         </q-field>
                                     </div>
                                 </div>
-                                <q-btn @click="deleteInfoItem(i)" class="col-1 q-mt-md" icon="delete" color="primary" style="height: 50px;"></q-btn>
+                                <q-btn @click="deleteInfoItem(i)" class="col-1 q-mt-md" icon="delete" color="primary"
+                                    style="height: 50px;"></q-btn>
                             </div>
                         </q-item>
                     </q-list>
@@ -113,6 +116,7 @@
 
 <script>
 import { ref } from 'vue'
+import { updateDoc, getDoc, doc, onSnapshot } from 'firebase/firestore'
 
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
@@ -123,6 +127,8 @@ const initialContent = {
     title: '',
     content: '',
 }
+let info_contents_listener = null
+console.log(info_contents_listener)
 
 export default {
     setup() {
@@ -132,7 +138,6 @@ export default {
             de: ref(''),
             biz: ref(''),
             cc: ref(''),
-            contents: ref([]),
             pushingContent: ref({
                 title: '',
                 content: '',
@@ -140,22 +145,47 @@ export default {
             dialog: ref([]),
         }
     },
-    created() {
+    beforeCreate() {
+        onSnapshot(doc(this.$firestore, '/root/departments'), docSnapshot => {
+            this.ds = docSnapshot.data().ds
+            this.de = docSnapshot.data().de
+            this.biz = docSnapshot.data().biz
+            this.cc = docSnapshot.data().cc
+            this.contents = docSnapshot.data().info_contents
+            this.dialog = docSnapshot.data().info_contents
+        })
+    },
+    async created() {
+        getDoc(doc(this.$firestore, '/root/departments'))
+            .then(docSnapshot => {
+                this.ds = docSnapshot.data().ds
+                this.de = docSnapshot.data().de
+                this.biz = docSnapshot.data().biz
+                this.cc = docSnapshot.data().cc
+                this.contents = docSnapshot.data().info_contents
+                this.dialog = docSnapshot.data().info_contents
+            })
     },
     methods: {
         addContent() {
             const pushItem = JSON.parse(JSON.stringify(this.pushingContent))
-            this.contents.push(pushItem)
             let dialogItem = JSON.parse(JSON.stringify(pushItem))
             let newDialog = JSON.parse(JSON.stringify(this.dialog))
             newDialog.push(dialogItem)
             this.dialog = newDialog
-            
+
             this.pushingContent = initialContent
         },
 
         save() {
-            console.log(this.dialog)
+            const data = {
+                ds: this.ds,
+                de: this.de,
+                biz: this.biz,
+                cc: this.cc,
+                info_contents: this.dialog,
+            }
+            updateDoc(doc(this.$firestore, '/root/departments'), data)
         },
         donwloadPowerpoint() {
             const datefmt = dayjs(this.date).format('YYYY年MM月DD日（ddd）')
@@ -198,13 +228,11 @@ export default {
             this.dialog = []
         },
         deleteInfoItem(i) {
-            this.contents.splice(i, 1)
-            this.dialog = this.contents
+            this.dialog = this.contents.splice(i, 1)
         }
     },
     watch: {
         dialog(newVal) {
-            console.log('watchが実行されました')
             this.$emit('update-dialog', newVal)
         }
     }
