@@ -228,11 +228,25 @@ export default {
                 info_contents: info_contents,
             }
             this.$axios.post('/generate', params).then(function (response) {
-                const downloadURL = response.data.download_url
-                const downloadLink = document.createElement('a')
-                downloadLink.href = downloadURL
-                downloadLink.download = `${datefmt_filename}.pptx`
-                downloadLink.click()
+                // Note data.file is a base64 string of pptx file
+                const fileContent = atob(response.data.file);
+
+                // Convert the base64 string to a byte array
+                let byteArray = new Uint8Array(fileContent.length);
+                for (let i = 0; i < fileContent.length; i++) {
+                    byteArray[i] = fileContent.charCodeAt(i);
+                }
+
+                // Create a Blob object from the byte array
+                const blob = new Blob([byteArray], {
+                    type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", response.data.filename);
+                document.body.appendChild(link);
+                link.click();
             }.bind(this))
         },
         htmlText(msg) {
