@@ -16,7 +16,6 @@ const firebase = initializeApp({
     storageBucket: process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.VUE_APP_FIREBASE_MESSAGE_SENDER_ID,
     appId: process.env.VUE_APP_FIREBASE_APP_ID,
-    measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID
 })
 const firestore = getFirestore()
 const auth = getAuth()
