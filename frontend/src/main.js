@@ -22,7 +22,7 @@ const auth = getAuth()
 const vueObj = createApp(App)
 
 vueObj.config.globalProperties.$axios = axios.create({
-    baseURL: process.env.VUE_API_URL,
+    baseURL: process.env.VUE_APP_API_URL,
 })
 vueObj.config.globalProperties.$firebase = firebase
 vueObj.config.globalProperties.$firestore = firestore
