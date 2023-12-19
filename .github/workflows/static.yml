@@ -24,13 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Change directory
-        run: cd frontend
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: "npm"
+          cache-dependency-path: ./frontend/package-lock.json
+      - name: Change directory
+        run: cd frontend
       - name: Install dependencies
         run: npm install
       - name: Build
@@ -42,7 +43,6 @@ jobs:
           VUE_APP_FIREBASE_STORAGE_BUCKET: ${{ secrets.VUE_APP_FIREBASE_STORAGE_BUCKET }}
           VUE_APP_FIREBASE_MESSAGE_SENDER_ID: ${{ secrets.VUE_APP_FIREBASE_MESSAGE_SENDER_ID }}
           VUE_APP_FIREBASE_APP_ID: ${{ secrets.VUE_APP_FIREBASE_APP_ID }}
-          VUE_APP_FIREBASE_MEASUREMENT_ID: ${{ secrets.VUE_APP_FIREBASE_MEASUREMENT_ID }}
           VUE_API_URL: ${{ secrets.VUE_API_URL }}
       - name: Setup Pages
         uses: actions/configure-pages@v3
