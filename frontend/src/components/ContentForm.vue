@@ -224,6 +224,7 @@ export default {
             const params = {
                 departments_contents: departments_contents,
                 datefmt: datefmt,
+                datefmt_filename: datefmt_filename,
                 info_contents: info_contents,
             }
             this.$axios.post('/generate', params).then(function (response) {
