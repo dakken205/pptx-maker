@@ -5,7 +5,9 @@ module.exports = defineConfig({
   ],
 
   assetsDir: 'static',
-  publicPath: '/',
+  publicPath: process.env.NODE_ENV === 'production'
+    ? '/pptx-maker/'
+    : '/',
 
   pluginOptions: {
     quasar: {
