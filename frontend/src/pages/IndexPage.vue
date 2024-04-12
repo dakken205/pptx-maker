@@ -1,42 +1,62 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
-  </q-page>
+  <q-drawer
+    side="right"
+    show-if-above
+    bordered
+    :width="150"
+    :breakpoint="500"
+    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
+  >
+    <div class="q-pa-sm">
+      <div class="text-h6">
+        <u>部門報告</u>
+      </div>
+      <template v-if="contentDialog.length !== 0">
+        <div v-for="(item, i) in contentDialog" :key="i">
+          <template v-if="i == 0">
+            <div class="text-h6">
+              <u>連絡事項</u>
+            </div>
+          </template>
+          <div class="text-subtitle1 q-ml-md">
+            ・<u>{{ item.title }}</u>
+          </div>
+        </div>
+      </template>
+    </div>
+  </q-drawer>
+  <q-layout>
+    <q-page-container>
+      <q-page>
+        <Content @update-dialog="handleDialog"></Content>
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script setup lang="ts">
-import { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
-import { ref } from 'vue';
+import type { Dialog } from 'components/model';
+import { ref, watch, onBeforeMount } from 'vue';
+import { useRouter } from 'vue-router';
+import { auth } from 'boot/firebase';
+import Content from 'components/ContentForm.vue';
 
-const todos = ref<Todo[]>([
-  {
-    id: 1,
-    content: 'ct1',
-  },
-  {
-    id: 2,
-    content: 'ct2',
-  },
-  {
-    id: 3,
-    content: 'ct3',
-  },
-  {
-    id: 4,
-    content: 'ct4',
-  },
-  {
-    id: 5,
-    content: 'ct5',
-  },
-]);
-const meta = ref<Meta>({
-  totalCount: 1200,
+const router = useRouter();
+const contentDialog = ref<Dialog[]>([]);
+
+onBeforeMount(() => {
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      router.push('/login');
+    }
+  });
 });
+
+watch(contentDialog, (newVal) => {
+  contentDialog.value = newVal;
+});
+
+const handleDialog = (dialog: Dialog) => {
+  contentDialog.value.push(dialog);
+};
 </script>
