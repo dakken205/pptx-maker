@@ -88,7 +88,7 @@
             </q-input>
             <div class="col q-gutter-x-sm" style="min-width: 130px">
               <q-btn
-                @click="donwloadPowerpoint"
+                @click="downloadPowerpoint"
                 class="float-right"
                 title="パワポのダウンロード"
                 color="primary"
@@ -257,166 +257,167 @@
   </q-card>
 </template>
 
-<script>
-import { ref, onBeforeUnmount } from 'vue';
+<script setup lang="ts">
+import type { Dialog } from './model';
+import { ref, onBeforeMount, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { auth, firestore } from 'boot/firebase';
 import { api } from 'boot/axios';
 import { updateDoc, getDoc, doc, onSnapshot } from 'firebase/firestore';
-
 import dayjs from 'dayjs';
 import 'dayjs/locale/ja';
+import { browserLocalPersistence } from 'firebase/auth';
+
 dayjs.locale('ja');
 
 const today = dayjs(new Date()).format('YYYY/MM/DD');
+
+const $q = useQuasar();
+
+onBeforeMount(() => {
+  onSnapshot(doc(firestore, '/root/departments'), (docSnapshot) => {
+    const data = docSnapshot.data();
+    if (!data) return;
+
+    ds.value = data.ds;
+    de.value = data.de;
+    biz.value = data.biz;
+    cc.value = data.cc;
+    dialog.value = data.info_contents as Dialog[];
+    dialog.value = [...dialog.value, ...myNewDialog.value];
+  });
+});
+
+onMounted(() => {
+  auth.setPersistence(browserLocalPersistence).then(() => {
+    if (!auth.currentUser) return;
+    getDoc(doc(firestore, `users/${auth.currentUser.email}`)).then(
+      (docSnapshot) => {
+        if (!docSnapshot.exists()) return;
+        role.value = docSnapshot.data().role;
+      }
+    );
+  });
+});
+
+const date = ref(today);
+const ds = ref('');
+const de = ref('');
+const biz = ref('');
+const cc = ref('');
 const initialContent = {
   title: '',
   content: '',
 };
+const pushingContent = ref<Dialog>({
+  title: '',
+  content: '',
+});
+const myNewDialog = ref<Dialog[]>([]);
+const role = ref('');
+const dialog = ref<Dialog[]>([]);
 
-export default {
-  setup() {
-    const $q = useQuasar();
-    let timer;
+const showLoading = (message: string) => {
+  $q.loading.show({
+    message: message,
+  });
+};
 
-    onBeforeUnmount(() => {
-      if (timer !== void 0) {
-        clearTimeout(timer);
-        $q.loading.hide();
-      }
+const hideLoading = () => {
+  $q.loading.hide();
+};
+
+const addContent = () => {
+  const pushItem = JSON.parse(JSON.stringify(pushingContent.value));
+  const dialogItem = JSON.parse(JSON.stringify(pushItem));
+  const newDialog = JSON.parse(JSON.stringify(dialog.value));
+  newDialog.push(dialogItem);
+
+  dialog.value = newDialog;
+  myNewDialog.value.push(pushItem);
+  pushingContent.value = initialContent;
+};
+
+const save = async () => {
+  showLoading('Database operations are in progress. Hang on...');
+  myNewDialog.value = [];
+  const data = {
+    ds: ds.value,
+    de: de.value,
+    biz: biz.value,
+    cc: cc.value,
+    info_contents: dialog.value,
+  };
+  try {
+    await updateDoc(doc(firestore, '/root/departments'), data);
+    $q.notify({
+      message: '下書き保存しました',
+      color: 'positive',
+      position: 'top',
+      timeout: 2000,
     });
-    return {
-      showLoading(message) {
-        $q.loading.show({
-          message: message,
-        });
-      },
-      hideLoading() {
-        $q.loading.hide();
-      },
-      date: ref(today),
-      ds: ref(''),
-      de: ref(''),
-      biz: ref(''),
-      cc: ref(''),
-      pushingContent: ref({
-        title: '',
-        content: '',
-      }),
-      myNewDialog: ref([]),
-      dialog: ref([]),
-      role: ref(''),
-    };
-  },
-  async beforeCreate() {
-    await onSnapshot(doc(firestore, '/root/departments'), (docSnapshot) => {
-      this.ds = docSnapshot.data().ds;
-      this.de = docSnapshot.data().de;
-      this.biz = docSnapshot.data().biz;
-      this.cc = docSnapshot.data().cc;
-      this.dialog = docSnapshot.data().info_contents;
-      this.dialog = [...this.dialog, ...this.myNewDialog];
+  } catch {
+    $q.notify({
+      message: '下書き保存に失敗しました',
+      color: 'negative',
+      position: 'top',
+      timeout: 2000,
     });
-  },
-  async created() {
-    await getDoc(doc(firestore, '/root/departments')).then((docSnapshot) => {
-      this.ds = docSnapshot.data().ds;
-      this.de = docSnapshot.data().de;
-      this.biz = docSnapshot.data().biz;
-      this.cc = docSnapshot.data().cc;
-      this.dialog = docSnapshot.data().info_contents;
+  } finally {
+    hideLoading();
+  }
+};
+
+const downloadPowerpoint = () => {
+  const datefmt = dayjs(date.value).format('YYYY年MM月DD日（ddd）');
+  const datefmt_filename = dayjs(date.value).format('YYYYMMDD');
+  const info_contents = dialog;
+  const departments_contents = {
+    ds: ds.value,
+    de: de.value,
+    biz: biz.value,
+    cc: cc.value,
+  };
+  const params = {
+    departments_contents: departments_contents,
+    datefmt: datefmt,
+    datefmt_filename: datefmt_filename,
+    info_contents: info_contents.value,
+  };
+  api.post('/generate', params).then((res) => {
+    // Note data.file is a base64 string of pptx file
+    // TODO: atob may be deprecated
+    const fileContent = atob(res.data.file);
+
+    // Convert the base64 string to a byte array
+    let byteArray = new Uint8Array(fileContent.length);
+    for (let i = 0; i < fileContent.length; i++) {
+      byteArray[i] = fileContent.charCodeAt(i);
+    }
+
+    // Create a Blob object from the byte array
+    const blob = new Blob([byteArray], {
+      type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });
-    await getDoc(doc(firestore, `users/${auth.currentUser.email}`)).then(
-      (docSnapshot) => {
-        this.role = docSnapshot.data().role;
-      }
-    );
-  },
-  methods: {
-    addContent() {
-      const pushItem = JSON.parse(JSON.stringify(this.pushingContent));
-      let dialogItem = JSON.parse(JSON.stringify(pushItem));
-      let newDialog = JSON.parse(JSON.stringify(this.dialog));
-      newDialog.push(dialogItem);
-      this.dialog = newDialog;
-      this.myNewDialog.push(pushItem);
-      this.pushingContent = initialContent;
-    },
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', res.data.filename);
+    document.body.appendChild(link);
+    link.click();
+  });
+};
 
-    async save() {
-      this.showLoading('Database operations are in progress. Hang on...');
-      this.myNewDialog = [];
-      const data = {
-        ds: this.ds,
-        de: this.de,
-        biz: this.biz,
-        cc: this.cc,
-        info_contents: this.dialog,
-      };
-      await updateDoc(doc(firestore, '/root/departments'), data);
-      this.hideLoading();
-    },
-    donwloadPowerpoint() {
-      const datefmt = dayjs(this.date).format('YYYY年MM月DD日（ddd）');
-      const datefmt_filename = dayjs(this.date).format('YYYYMMDD');
-      const info_contents = this.dialog;
-      const departments_contents = {
-        ds: [this.ds],
-        de: [this.de],
-        biz: [this.biz],
-        cc: [this.cc],
-      };
-      const params = {
-        departments_contents: departments_contents,
-        datefmt: datefmt,
-        datefmt_filename: datefmt_filename,
-        info_contents: info_contents,
-      };
-      api.post('/generate', params).then(
-        function (response) {
-          // Note data.file is a base64 string of pptx file
-          const fileContent = atob(response.data.file);
+const reset = () => {
+  ds.value = '';
+  de.value = '';
+  biz.value = '';
+  cc.value = '';
+  pushingContent.value = initialContent;
+  dialog.value = [];
+};
 
-          // Convert the base64 string to a byte array
-          let byteArray = new Uint8Array(fileContent.length);
-          for (let i = 0; i < fileContent.length; i++) {
-            byteArray[i] = fileContent.charCodeAt(i);
-          }
-
-          // Create a Blob object from the byte array
-          const blob = new Blob([byteArray], {
-            type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', response.data.filename);
-          document.body.appendChild(link);
-          link.click();
-        }.bind(this)
-      );
-    },
-    htmlText(msg) {
-      if (msg instanceof String) {
-        return msg.replace('\r\n', '<br>');
-      }
-    },
-    reset() {
-      this.ds = '';
-      this.de = '';
-      this.biz = '';
-      this.cc = '';
-      this.pushingContent = initialContent;
-      this.dialog = [];
-    },
-    deleteInfoItem(i) {
-      this.dialog.splice(i, 1);
-    },
-  },
-  watch: {
-    dialog(newVal) {
-      this.$emit('update-dialog', newVal);
-    },
-  },
+const deleteInfoItem = (i: number) => {
+  dialog.value.splice(i, 1);
 };
 </script>
