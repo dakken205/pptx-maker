@@ -36,25 +36,11 @@
 
 <script setup lang="ts">
 import type { Dialog } from 'components/model';
-import { ref, watch, onBeforeMount } from 'vue';
-import { useRouter } from 'vue-router';
-import { auth } from 'boot/firebase';
+import { ref } from 'vue';
 import Content from 'components/ContentForm.vue';
 
-const router = useRouter();
 const contentDialog = ref<Dialog[]>([]);
-
-onBeforeMount(() => {
-  auth.onAuthStateChanged((user) => {
-    if (!user) {
-      router.push('/login');
-    }
-  });
-});
-
-watch(contentDialog, (newVal) => {
-  contentDialog.value = newVal;
-});
+// TODO: Implement the watch function to monitor the contentDialog variable
 
 const handleDialog = (dialog: Dialog) => {
   contentDialog.value.push(dialog);

@@ -21,15 +21,11 @@
         </div>
       </div>
     </q-card>
-    <template v-if="failed">
-      <div class="q-mt-lg" style="color: red">
-        Sorry, e-mail or password is wrong.
-      </div>
-    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {
@@ -38,22 +34,34 @@ import {
 } from 'firebase/auth';
 import { auth } from 'boot/firebase';
 
+const $q = useQuasar();
 const router = useRouter();
 
-const email = ref('dakken205de@gmail.com');
-const password = ref('depptxmaker241212432');
-const failed = ref(false);
+const email = ref('');
+const password = ref('');
 
 const login = () => {
-  failed.value = false;
+  $q.loading.show({ message: 'ログイン中...' });
   auth.setPersistence(browserLocalPersistence).then(() => {
     return signInWithEmailAndPassword(auth, email.value, password.value)
       .then(() => {
         router.push('/');
+        $q.notify({
+          message: 'ログインしました',
+          color: 'positive',
+          position: 'top',
+        });
       })
       .catch(() => {
-        failed.value = true;
         password.value = '';
+        $q.notify({
+          message: 'ユーザ名またはパスワードが違います',
+          color: 'negative',
+          position: 'top',
+        });
+      })
+      .finally(() => {
+        $q.loading.hide();
       });
   });
 };
