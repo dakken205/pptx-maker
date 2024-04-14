@@ -40,9 +40,8 @@ import { ref } from 'vue';
 import Content from 'components/ContentForm.vue';
 
 const contentDialog = ref<Dialog[]>([]);
-// TODO: Implement the watch function to monitor the contentDialog variable
 
-const handleDialog = (dialog: Dialog) => {
-  contentDialog.value.push(dialog);
+const handleDialog = (dialog: Dialog[]) => {
+  contentDialog.value = dialog;
 };
 </script>

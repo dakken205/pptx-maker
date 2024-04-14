@@ -273,6 +273,7 @@ dayjs.locale('ja');
 const today = dayjs(new Date()).format('YYYY/MM/DD');
 
 const $q = useQuasar();
+const emit = defineEmits(['update-dialog']);
 
 onBeforeMount(() => {
   onSnapshot(doc(firestore, '/root/departments'), (docSnapshot) => {
@@ -285,6 +286,7 @@ onBeforeMount(() => {
     cc.value = data.cc;
     dialog.value = data.info_contents as Dialog[];
     dialog.value = [...dialog.value, ...myNewDialog.value];
+    emit('update-dialog', dialog.value);
   });
 });
 
@@ -336,6 +338,22 @@ const addContent = () => {
   dialog.value = newDialog;
   myNewDialog.value.push(pushItem);
   pushingContent.value = initialContent;
+  emit('update-dialog', dialog.value);
+};
+
+const deleteInfoItem = (i: number) => {
+  dialog.value.splice(i, 1);
+  emit('update-dialog', dialog.value);
+};
+
+const reset = () => {
+  ds.value = '';
+  de.value = '';
+  biz.value = '';
+  cc.value = '';
+  pushingContent.value = initialContent;
+  dialog.value = [];
+  emit('update-dialog', dialog.value);
 };
 
 const save = async () => {
@@ -406,18 +424,5 @@ const downloadPowerpoint = () => {
     document.body.appendChild(link);
     link.click();
   });
-};
-
-const reset = () => {
-  ds.value = '';
-  de.value = '';
-  biz.value = '';
-  cc.value = '';
-  pushingContent.value = initialContent;
-  dialog.value = [];
-};
-
-const deleteInfoItem = (i: number) => {
-  dialog.value.splice(i, 1);
 };
 </script>
