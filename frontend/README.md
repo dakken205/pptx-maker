@@ -1,26 +1,43 @@
-# frontend
+# pptx-maker (frontend)
 
-## Project setup
-```
+DA 研のための定例会資料作成支援ツール
+
+## Install the dependencies
+
+```bash
+yarn
+# or
 npm install
-npm install dayjs firebase axios --save
-npm install -g firebase-tools
 ```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
+### Start the app in development mode (hot-code reloading, error reporting, etc.)
+
+```bash
+quasar dev
 ```
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### Lint the files
 
-### Lints and fixes files
-```
+```bash
+yarn lint
+# or
 npm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Format the files
+
+```bash
+yarn format
+# or
+npm run format
+```
+
+### Build the app for production
+
+```bash
+quasar build
+```
+
+### Customize the configuration
+
+See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
