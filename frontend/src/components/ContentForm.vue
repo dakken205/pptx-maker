@@ -297,7 +297,7 @@ onMounted(() => {
       (docSnapshot) => {
         if (!docSnapshot.exists()) return;
         role.value = docSnapshot.data().role;
-      }
+      },
     );
   });
 });
@@ -391,10 +391,10 @@ const downloadPowerpoint = () => {
   const datefmt_filename = dayjs(date.value).format('YYYYMMDD');
   const info_contents = dialog;
   const departments_contents = {
-    ds: ds.value,
-    de: de.value,
-    biz: biz.value,
-    cc: cc.value,
+    ds: [ds.value],
+    de: [de.value],
+    biz: [biz.value],
+    cc: [cc.value],
   };
   const params = {
     departments_contents: departments_contents,
